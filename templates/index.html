@@ -1,0 +1,172 @@
+{% extends "base.html" %}
+
+{% block content %}
+<div class="d-flex justify-content-between align-items-center mb-3">
+  <h2 class="mb-0">{{ _('My Envelopes') }}</h2>
+  <button class="btn btn-primary" data-bs-toggle="modal" data-bs-target="#createModal">+ {{ _('New Envelope') }}</button>
+</div>
+
+{% if envelopes %}
+<div class="table-responsive">
+  <table class="table table-hover align-middle">
+    <thead class="table-light">
+      <tr>
+        <th>{{ _('Envelope') }}</th>
+        <th>{{ _('Monthly') }}</th>
+        <th>{{ _('Cap') }}</th>
+        <th>{{ _('You Have') }}</th>
+        <th>{{ _('To Add') }}</th>
+        <th></th>
+      </tr>
+    </thead>
+    <tbody>
+      {% for env in envelopes %}
+      <tr>
+        <td class="fw-semibold">{{ env.name }}</td>
+        <td>&#x20A1;{{ "{:,.0f}".format(env.monthly_amount) }}</td>
+        <td>
+          {% if env.cap %}
+            &#x20A1;{{ "{:,.0f}".format(env.cap) }} <small class="text-muted">(&#x20A1;{{ "{:,.0f}".format(env.cap / 2) }} {{ _('biweekly') }})</small>
+          {% else %}
+            <span class="text-muted">&mdash;</span>
+          {% endif %}
+        </td>
+        <td style="width:160px">
+          <div class="input-group input-group-sm">
+            <span class="input-group-text">&#x20A1;</span>
+            <input type="number" step="0.01" min="0"
+                   class="form-control current-amount"
+                   data-monthly="{{ env.monthly_amount }}"
+                   data-cap="{{ env.cap if env.cap else '' }}"
+                   placeholder="0">
+          </div>
+        </td>
+        <td class="result-cell">
+          <span class="fw-bold">&mdash;</span>
+        </td>
+        <td>
+          <div class="btn-group btn-group-sm">
+            <button class="btn btn-outline-secondary" data-bs-toggle="modal" data-bs-target="#editModal{{ env.id }}">{{ _('Edit') }}</button>
+            <form action="{{ url_for('web.delete', envelope_id=env.id) }}" method="post" onsubmit="return confirm('{{ _('Delete') }} «{{ env.name }}»?')" style="display:inline">
+              <button class="btn btn-outline-danger">&times;</button>
+            </form>
+          </div>
+        </td>
+      </tr>
+
+      <!-- Edit Modal -->
+      <div class="modal fade" id="editModal{{ env.id }}" tabindex="-1">
+        <div class="modal-dialog">
+          <div class="modal-content">
+            <form action="{{ url_for('web.edit', envelope_id=env.id) }}" method="post">
+              <div class="modal-header">
+                <h5 class="modal-title">{{ _('Edit') }} &laquo;{{ env.name }}&raquo;</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+              </div>
+              <div class="modal-body">
+                <div class="mb-3">
+                  <label class="form-label">{{ _('Name') }}</label>
+                  <input type="text" name="name" class="form-control" value="{{ env.name }}" required>
+                </div>
+                <div class="mb-3">
+                  <label class="form-label">{{ _('Monthly Amount') }}</label>
+                  <input type="number" name="monthly_amount" step="0.01" min="0.01" class="form-control" value="{{ env.monthly_amount }}" required>
+                </div>
+                <div class="mb-3">
+                  <label class="form-label">{{ _('Cap') }} <small class="text-muted">({{ _('leave empty for no cap') }})</small></label>
+                  <input type="number" name="cap" step="0.01" min="0.01" class="form-control" value="{{ env.cap if env.cap else '' }}" placeholder="{{ _('No cap') }}">
+                </div>
+              </div>
+              <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">{{ _('Cancel') }}</button>
+                <button type="submit" class="btn btn-primary">{{ _('Save') }}</button>
+              </div>
+            </form>
+          </div>
+        </div>
+      </div>
+      {% endfor %}
+    </tbody>
+    <tfoot class="table-light fw-bold">
+      <tr>
+        <td colspan="4" class="text-end">{{ _('Total to Add') }}</td>
+        <td id="total-cell">&#x20A1;0</td>
+        <td></td>
+      </tr>
+    </tfoot>
+  </table>
+</div>
+{% else %}
+<div class="text-center py-5 text-muted">
+  <p class="fs-5">{{ _('No envelopes yet.') }}</p>
+  <p>{{ _('Create your first envelope to get started.') }}</p>
+</div>
+{% endif %}
+
+<!-- Create Modal -->
+<div class="modal fade" id="createModal" tabindex="-1">
+  <div class="modal-dialog">
+    <div class="modal-content">
+      <form action="{{ url_for('web.create') }}" method="post">
+        <div class="modal-header">
+          <h5 class="modal-title">{{ _('New Envelope') }}</h5>
+          <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+        </div>
+        <div class="modal-body">
+          <div class="mb-3">
+            <label class="form-label">{{ _('Name') }}</label>
+            <input type="text" name="name" class="form-control" placeholder="{{ _('e.g. Entertainment') }}" required>
+          </div>
+          <div class="mb-3">
+            <label class="form-label">{{ _('Monthly Amount') }}</label>
+            <input type="number" name="monthly_amount" step="0.01" min="0.01" class="form-control" placeholder="{{ _('e.g. 50000') }}" required>
+          </div>
+          <div class="mb-3">
+            <label class="form-label">{{ _('Cap') }} <small class="text-muted">({{ _('leave empty for no cap') }})</small></label>
+            <input type="number" name="cap" step="0.01" min="0.01" class="form-control" placeholder="{{ _('e.g. 50000') }}">
+          </div>
+        </div>
+        <div class="modal-footer">
+          <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">{{ _('Cancel') }}</button>
+          <button type="submit" class="btn btn-primary">{{ _('Create') }}</button>
+        </div>
+      </form>
+    </div>
+  </div>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script>
+function updateTotal() {
+  let total = 0;
+  document.querySelectorAll('.result-cell span').forEach(cell => {
+    const val = parseFloat(cell.textContent.replace(/[^0-9.-]/g, '')) || 0;
+    total += val;
+  });
+  document.getElementById('total-cell').textContent = '\u20A1' + total.toLocaleString('es-CR');
+}
+
+document.querySelectorAll('.current-amount').forEach(input => {
+  function calculate() {
+    const row = input.closest('tr');
+    const cell = row.querySelector('.result-cell span');
+    const current = parseFloat(input.value) || 0;
+    const monthly = parseFloat(input.dataset.monthly) || 0;
+    const capRaw = input.dataset.cap;
+    let toAdd;
+    if (capRaw !== '') {
+      const cap = parseFloat(capRaw) || 0;
+      toAdd = Math.max(0, (cap / 2) - current);
+    } else {
+      toAdd = monthly / 2;
+    }
+    cell.textContent = '\u20A1' + toAdd.toLocaleString('es-CR');
+    cell.className = toAdd > 0 ? 'fw-bold text-success' : 'text-muted';
+    updateTotal();
+  }
+  input.addEventListener('input', calculate);
+  calculate();
+});
+</script>
+{% endblock %}

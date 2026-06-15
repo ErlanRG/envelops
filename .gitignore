@@ -1,0 +1,14 @@
+# User data
+data/
+
+# Python
+__pycache__/
+*.py[cod]
+*.egg-info/
+
+# Virtual environment
+.venv/
+
+# OS
+.DS_Store
+Thumbs.db
